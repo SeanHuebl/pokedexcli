@@ -36,7 +36,9 @@ func getCommands() map[string]cliCommand {
 		"mapb": {
 			name:        "mapb",
 			description: "Displays the previous 20 location areas",
-			callback:    commandMapb,
+			callback: func() error {
+				return commandMapb(&config)
+			},
 		},
 	}
 }
@@ -81,6 +83,11 @@ func main() {
 
 		case "map":
 			err := getCommands()["map"].callback()
+			if err != nil {
+				fmt.Println(err)
+			}
+		case "mapb":
+			err := getCommands()["mapb"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
