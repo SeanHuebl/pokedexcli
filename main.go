@@ -12,23 +12,9 @@ type cliCommand struct {
 	callback    func() error
 }
 
-func commandHelp() error {
-	fmt.Println("Welcome to the Pokedex:")
-	fmt.Println("Usage:")
-	fmt.Println("")
-	fmt.Println("help: Displays a help message")
-	fmt.Println("exit: Exits the program")
-	fmt.Println("")
-	return nil
-}
+func getCommands() map[string]cliCommand {
 
-func commandExit() error {
-	os.Exit(0)
-	return nil
-}
-func main() {
-
-	/* commands := map[string]cliCommand{
+	return map[string]cliCommand{
 		"help": {
 			name:        "help",
 			description: "Displays a help message",
@@ -40,7 +26,36 @@ func main() {
 			description: "Exits the program",
 			callback:    commandExit,
 		},
-	} */
+		"map": {
+			name:        "map",
+			description: "Displays the next 20 location areas",
+			callback: func() error {
+				return commandMap(&config)
+			},
+		},
+		"mapb": {
+			name:        "mapb",
+			description: "Displays the previous 20 location areas",
+			callback:    commandMapb,
+		},
+	}
+}
+
+func commandHelp() error {
+	commands := getCommands()
+	fmt.Println("Welcome to the Pokedex:")
+	fmt.Println("Usage:")
+	fmt.Println("")
+	fmt.Printf("help: %v\n", commands["help"].description)
+	fmt.Printf("exit: %v\n", commands["exit"].description)
+	return nil
+}
+
+func commandExit() error {
+	os.Exit(0)
+	return nil
+}
+func main() {
 
 	ch := make(chan string)
 	go func() {
@@ -55,11 +70,20 @@ func main() {
 		fmt.Print("pokedex > ")
 		value := <-ch
 		fmt.Println("")
-		if value == "help" {
+		switch value {
+
+		case "help":
 			commandHelp()
-		}
-		if value == "exit" {
+			fmt.Println("")
+
+		case "exit":
 			commandExit()
+
+		case "map":
+			err := getCommands()["map"].callback()
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
 
 	}
