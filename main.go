@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+
+	"github.com/seanhuebl/pokedexcli/internal"
 )
 
 type cliCommand struct {
@@ -30,14 +32,14 @@ func getCommands() map[string]cliCommand {
 			name:        "map",
 			description: "Displays the next 20 location areas",
 			callback: func() error {
-				return commandMap(&config)
+				return internal.CommandMap(&internal.Conf)
 			},
 		},
 		"mapb": {
 			name:        "mapb",
 			description: "Displays the previous 20 location areas",
 			callback: func() error {
-				return commandMapb(&config)
+				return internal.CommandMapb(&internal.Conf)
 			},
 		},
 	}
@@ -91,6 +93,7 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
+			
 		}
 
 	}
