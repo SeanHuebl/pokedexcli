@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/seanhuebl/pokedexcli/internal"
 )
@@ -14,7 +15,7 @@ type cliCommand struct {
 	callback    func() error
 }
 
-func getCommands() map[string]cliCommand {
+func getCommands(config *internal.Config, cache *internal.Cache) map[string]cliCommand {
 
 	return map[string]cliCommand{
 		"help": {
@@ -32,25 +33,33 @@ func getCommands() map[string]cliCommand {
 			name:        "map",
 			description: "Displays the next 20 location areas",
 			callback: func() error {
-				return internal.CommandMap(&internal.Conf)
+				if config == nil || cache == nil {
+					return fmt.Errorf("config or cache not provided for 'map' command")
+				}
+				return internal.CommandMap(config, cache)
 			},
 		},
 		"mapb": {
 			name:        "mapb",
 			description: "Displays the previous 20 location areas",
 			callback: func() error {
-				return internal.CommandMapb(&internal.Conf)
+				if config == nil || cache == nil {
+					return fmt.Errorf("config or cache not provided for 'mapb' command")
+				}
+				return internal.CommandMapb(config, cache)
 			},
 		},
 	}
 }
 
 func commandHelp() error {
-	commands := getCommands()
+	commands := getCommands(nil, nil)
 	fmt.Println("Welcome to the Pokedex:")
 	fmt.Println("Usage:")
 	fmt.Println("")
 	fmt.Printf("help: %v\n", commands["help"].description)
+	fmt.Printf("help: %v\n", commands["map"].description)
+	fmt.Printf("help: %v\n", commands["mapb"].description)
 	fmt.Printf("exit: %v\n", commands["exit"].description)
 	return nil
 }
@@ -60,8 +69,11 @@ func commandExit() error {
 	return nil
 }
 func main() {
-
+	const interval = 5 * time.Second
 	ch := make(chan string)
+	cache := internal.NewCache(interval)
+	config := &internal.Conf
+
 	go func() {
 		defer close(ch)
 		scanner := bufio.NewScanner(os.Stdin)
@@ -84,16 +96,16 @@ func main() {
 			commandExit()
 
 		case "map":
-			err := getCommands()["map"].callback()
+			err := getCommands(config, cache)["map"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
 		case "mapb":
-			err := getCommands()["mapb"].callback()
+			err := getCommands(config, cache)["mapb"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
-			
+
 		}
 
 	}

@@ -29,26 +29,36 @@ var Conf = Config{
 	Previous: nil,
 }
 
-func CommandMap(cF *Config) error {
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", cF.Next, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	res, err := client.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer res.Body.Close()
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
+func CommandMap(cF *Config, c *Cache) error {
+	v, ok := c.entry[cF.Next]
 	var location Location
-	if err = json.Unmarshal(data, &location); err != nil {
-		return err
+	if !ok {
+
+		client := &http.Client{}
+		req, err := http.NewRequest("GET", cF.Next, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		res, err := client.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		defer res.Body.Close()
+		data, err := io.ReadAll(res.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		c.Add(cF.Next, data)
+
+		if err := json.Unmarshal(data, &location); err != nil {
+			return err
+		}
+	} else {
+		if err := json.Unmarshal(v.val, &location); err != nil {
+			return err
+		}
 	}
 
 	cF.Next = location.Next
@@ -60,7 +70,7 @@ func CommandMap(cF *Config) error {
 	return nil
 }
 
-func CommandMapb(cF *Config) error {
+func CommandMapb(cF *Config, c *Cache) error {
 	if cF.Previous == nil {
 		return fmt.Errorf("no previous location")
 	}
