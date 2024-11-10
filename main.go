@@ -15,7 +15,7 @@ type cliCommand struct {
 	callback    func() error
 }
 
-func getCommands(config *internal.Config, cache *internal.Cache) map[string]cliCommand {
+func getCommands(config *internal.Config, cache *internal.Cache, areaName string) map[string]cliCommand {
 
 	return map[string]cliCommand{
 		"help": {
@@ -49,11 +49,21 @@ func getCommands(config *internal.Config, cache *internal.Cache) map[string]cliC
 				return internal.CommandMapb(config, cache)
 			},
 		},
+		"explore": {
+			name:        "explore <location-area>",
+			description: "Displays the pokemon in the area",
+			callback: func() error {
+				if config == nil || cache == nil {
+					return fmt.Errorf("config or cache not provided for 'mapb' command")
+				}
+				return internal.Explore(cache, areaName)
+			},
+		},
 	}
 }
 
 func commandHelp() error {
-	commands := getCommands(nil, nil)
+	commands := getCommands(nil, nil, "")
 	fmt.Println("Welcome to the Pokedex:")
 	fmt.Println("Usage:")
 	fmt.Println("")
@@ -96,12 +106,12 @@ func main() {
 			commandExit()
 
 		case "map":
-			err := getCommands(config, cache)["map"].callback()
+			err := getCommands(config, cache, "")["map"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
 		case "mapb":
-			err := getCommands(config, cache)["mapb"].callback()
+			err := getCommands(config, cache, "")["mapb"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
