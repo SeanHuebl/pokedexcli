@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"regexp"
+	"strings"
 	"time"
 
 	"github.com/seanhuebl/pokedexcli/internal"
@@ -53,8 +55,8 @@ func getCommands(config *internal.Config, cache *internal.Cache, areaName string
 			name:        "explore <location-area>",
 			description: "Displays the pokemon in the area",
 			callback: func() error {
-				if config == nil || cache == nil {
-					return fmt.Errorf("config or cache not provided for 'mapb' command")
+				if cache == nil {
+					return fmt.Errorf("cache not provided for 'explore' command")
 				}
 				return internal.Explore(cache, areaName)
 			},
@@ -96,22 +98,33 @@ func main() {
 		fmt.Print("pokedex > ")
 		value := <-ch
 		fmt.Println("")
-		switch value {
+		helpMatch := regexp.MustCompile("help")
+		exitMatch := regexp.MustCompile("exit")
+		mapMatch := regexp.MustCompile("^map$")
+		mapbMatch := regexp.MustCompile("mapb")
+		exploreMatch := regexp.MustCompile("^explore .*")
+		switch true {
 
-		case "help":
+		case helpMatch.MatchString(value):
 			commandHelp()
 			fmt.Println("")
 
-		case "exit":
+		case exitMatch.MatchString(value):
 			commandExit()
 
-		case "map":
+		case mapMatch.MatchString(value):
 			err := getCommands(config, cache, "")["map"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
-		case "mapb":
+		case mapbMatch.MatchString(value):
 			err := getCommands(config, cache, "")["mapb"].callback()
+			if err != nil {
+				fmt.Println(err)
+			}
+		case exploreMatch.MatchString(value):
+			areaName := strings.Split(value, " ")[1]
+			err := getCommands(nil, cache, areaName)["explore"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}

@@ -25,6 +25,7 @@ type PokemonEncounters []struct {
 		Url  string `json:"url"`
 	} `json:"pokemon"`
 }
+
 type Config struct {
 	Next     string
 	Previous *string
@@ -121,9 +122,11 @@ func CommandMapb(cF *Config, c *Cache) error {
 }
 
 func Explore(c *Cache, areaName string) error {
-	fmt.Printf("Exploring %s", areaName)
+	fmt.Printf("Exploring %s...\nPokemon:\n", areaName)
 	areaUrl := "https://pokeapi.co/api/v2/location-area/" + areaName
-	var encounters PokemonEncounters
+	var encounters struct {
+		PokemonEncounters PokemonEncounters `json:"pokemon_encounters"`
+	}
 	v, ok := c.entry[areaName]
 	if !ok {
 		client := &http.Client{}
@@ -150,6 +153,10 @@ func Explore(c *Cache, areaName string) error {
 		if err := json.Unmarshal(v.val, &encounters); err != nil {
 			return err
 		}
+	}
+
+	for _, encounter := range encounters.PokemonEncounters {
+		fmt.Printf("- %s\n", encounter.Pokemon.Name)
 	}
 	return nil
 }
