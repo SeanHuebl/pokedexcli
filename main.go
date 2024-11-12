@@ -17,7 +17,7 @@ type cliCommand struct {
 	callback    func() error
 }
 
-func getCommands(config *internal.Config, cache *internal.Cache, areaName string) map[string]cliCommand {
+func getCommands(config *internal.Config, cache *internal.Cache, areaName, pokemonName string) map[string]cliCommand {
 
 	return map[string]cliCommand{
 		"help": {
@@ -61,17 +61,36 @@ func getCommands(config *internal.Config, cache *internal.Cache, areaName string
 				return internal.Explore(cache, areaName)
 			},
 		},
+		"catch": {
+			name:        "catch <pokemon-name>",
+			description: "Attempts to catch target pokemon",
+			callback: func() error {
+				if cache == nil {
+					return fmt.Errorf("cache not provided for 'catch' command")
+				}
+				return internal.Catch(cache, pokemonName)
+			},
+		},
+		"inspect": {
+			name:        "inspect <pokemon-name>",
+			description: "Displays information about caught pokemon",
+			callback: func() error {
+				return internal.Inspect(pokemonName)
+			},
+		},
 	}
 }
-
 func commandHelp() error {
-	commands := getCommands(nil, nil, "")
+	commands := getCommands(nil, nil, "", "")
 	fmt.Println("Welcome to the Pokedex:")
 	fmt.Println("Usage:")
 	fmt.Println("")
 	fmt.Printf("help: %v\n", commands["help"].description)
-	fmt.Printf("help: %v\n", commands["map"].description)
-	fmt.Printf("help: %v\n", commands["mapb"].description)
+	fmt.Printf("map: %v\n", commands["map"].description)
+	fmt.Printf("mapb: %v\n", commands["mapb"].description)
+	fmt.Printf("explore <area-name>: %v\n", commands["explore"].description)
+	fmt.Printf("catch <pokemon-name>: %v\n", commands["catch"].description)
+	fmt.Printf("inspect <pokemon-name>: %v\n", commands["inspect"].description)
 	fmt.Printf("exit: %v\n", commands["exit"].description)
 	return nil
 }
@@ -103,6 +122,8 @@ func main() {
 		mapMatch := regexp.MustCompile("^map$")
 		mapbMatch := regexp.MustCompile("mapb")
 		exploreMatch := regexp.MustCompile("^explore .*")
+		catchMatch := regexp.MustCompile("^catch .*")
+		inspectMatch := regexp.MustCompile("^inspect .*")
 		switch true {
 
 		case helpMatch.MatchString(value):
@@ -113,23 +134,34 @@ func main() {
 			commandExit()
 
 		case mapMatch.MatchString(value):
-			err := getCommands(config, cache, "")["map"].callback()
+			err := getCommands(config, cache, "", "")["map"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
 		case mapbMatch.MatchString(value):
-			err := getCommands(config, cache, "")["mapb"].callback()
+			err := getCommands(config, cache, "", "")["mapb"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
 		case exploreMatch.MatchString(value):
 			areaName := strings.Split(value, " ")[1]
-			err := getCommands(nil, cache, areaName)["explore"].callback()
+			err := getCommands(nil, cache, areaName, "")["explore"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
-
+		case catchMatch.MatchString(value):
+			pokemonName := strings.Split(value, " ")[1]
+			err := getCommands(nil, cache, "", pokemonName)["catch"].callback()
+			if err != nil {
+				fmt.Println(err)
+			}
+		case inspectMatch.MatchString(value):
+			pokemonName := strings.Split(value, " ")[1]
+			err := getCommands(nil, cache, "", pokemonName)["inspect"].callback()
+			if err != nil {
+				fmt.Println(err)
+			}
 		}
-
+	
 	}
 }

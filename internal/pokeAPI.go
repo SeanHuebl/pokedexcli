@@ -90,7 +90,7 @@ var Conf = Config{
 	Previous: nil,
 }
 
-var Pokedex map[string]Pokemon
+var Pokedex = make(map[string]Pokemon)
 
 func CommandMap(cF *Config, c *Cache) error {
 	var location Location
@@ -217,7 +217,7 @@ func Explore(c *Cache, areaName string) error {
 	return nil
 }
 func Catch(c *Cache, pokemonName string) error {
-	pokemonUrl := "https://pokeapi.co/api/v2/" + pokemonName
+	pokemonUrl := "https://pokeapi.co/api/v2/pokemon/" + pokemonName
 	fmt.Printf("Throwing a ball at %s...\n", pokemonName)
 	var pokemon Pokemon
 	v, ok := c.entry[pokemonName]
@@ -239,6 +239,7 @@ func Catch(c *Cache, pokemonName string) error {
 			log.Fatal(err)
 		}
 		c.Add(pokemonUrl, data)
+
 		if err = json.Unmarshal(data, &pokemon); err != nil {
 			return err
 		}
@@ -247,6 +248,7 @@ func Catch(c *Cache, pokemonName string) error {
 			return err
 		}
 	}
+
 	if pokemon.BaseExperience < 70 {
 		pokemon.CatchChance = .85
 	} else if pokemon.BaseExperience < 160 {
@@ -259,10 +261,21 @@ func Catch(c *Cache, pokemonName string) error {
 
 	catchRoll := rand.Float32()
 	if catchRoll < pokemon.CatchChance {
-		fmt.Printf("%s was caught!\n", pokemonName)
+		fmt.Printf("%s was caught!\n\n", pokemonName)
 		Pokedex[pokemonName] = pokemon
 		return nil
 	}
-	fmt.Printf("%s escaped!\n", pokemonName)
+	fmt.Printf("%s escaped!\n\n", pokemonName)
+	return nil
+}
+func Inspect(pokemonName string) error {
+	val, ok := Pokedex[pokemonName]
+	if !ok {
+		return fmt.Errorf("pokemon not found")
+	}
+	fmt.Printf("Name: %v\nHeight: %v\nWeight: %v\nStats:\n", val.Name, val.Height, val.Weight)
+	for _, stat := range val.Stats {
+		fmt.Printf("  -%v: %v\n", stat.Stat.Name, stat.BaseStat)
+	}
 	return nil
 }
