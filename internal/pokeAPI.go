@@ -261,7 +261,7 @@ func Catch(c *Cache, pokemonName string) error {
 
 	catchRoll := rand.Float32()
 	if catchRoll < pokemon.CatchChance {
-		fmt.Printf("%s was caught!\n\n", pokemonName)
+		fmt.Printf("%s was caught!\ndata added to pokedex\nto view data use the inspect command\n\n", pokemonName)
 		Pokedex[pokemonName] = pokemon
 		return nil
 	}
@@ -271,11 +271,28 @@ func Catch(c *Cache, pokemonName string) error {
 func Inspect(pokemonName string) error {
 	val, ok := Pokedex[pokemonName]
 	if !ok {
-		return fmt.Errorf("pokemon not found")
+		return fmt.Errorf("pokemon not found\n")
 	}
 	fmt.Printf("Name: %v\nHeight: %v\nWeight: %v\nStats:\n", val.Name, val.Height, val.Weight)
 	for _, stat := range val.Stats {
-		fmt.Printf("  -%v: %v\n", stat.Stat.Name, stat.BaseStat)
+		fmt.Printf("  - %v: %v\n", stat.Stat.Name, stat.BaseStat)
 	}
+	fmt.Println("Types:")
+	for _, poketype := range val.Types {
+		fmt.Printf("  - %v\n", poketype.Type.Name)
+	}
+	return nil
+}
+func ViewPokedex() error {
+	fmt.Println("Your pokedex:")
+	if len(Pokedex) == 0 {
+		fmt.Printf("Your pokedex contains 0 pokemon\n\n")
+	} else {
+		for key := range Pokedex {
+			fmt.Printf("  - %v\n", key)
+		}
+
+	}
+	fmt.Println("")
 	return nil
 }

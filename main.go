@@ -78,6 +78,13 @@ func getCommands(config *internal.Config, cache *internal.Cache, areaName, pokem
 				return internal.Inspect(pokemonName)
 			},
 		},
+		"pokedex": {
+			name:        "pokedex",
+			description: "display caught pokemon in pokedex",
+			callback: func() error {
+				return internal.ViewPokedex()
+			},
+		},
 	}
 }
 func commandHelp() error {
@@ -91,7 +98,8 @@ func commandHelp() error {
 	fmt.Printf("explore <area-name>: %v\n", commands["explore"].description)
 	fmt.Printf("catch <pokemon-name>: %v\n", commands["catch"].description)
 	fmt.Printf("inspect <pokemon-name>: %v\n", commands["inspect"].description)
-	fmt.Printf("exit: %v\n", commands["exit"].description)
+	fmt.Printf("pokedex: %v\n", commands["pokedex"].description)
+	fmt.Printf("exit: %v\n\n", commands["exit"].description)
 	return nil
 }
 
@@ -124,6 +132,7 @@ func main() {
 		exploreMatch := regexp.MustCompile("^explore .*")
 		catchMatch := regexp.MustCompile("^catch .*")
 		inspectMatch := regexp.MustCompile("^inspect .*")
+		pokedexMatch := regexp.MustCompile("pokedex")
 		switch true {
 
 		case helpMatch.MatchString(value):
@@ -161,7 +170,13 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
+		case pokedexMatch.MatchString(value):
+			err := getCommands(nil, nil, "", "")["pokedex"].callback()
+			if err != nil {
+				fmt.Println(err)
+			}
+
 		}
-	
+
 	}
 }
