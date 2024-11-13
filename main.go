@@ -185,6 +185,8 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
+		default:
+			fmt.Println("command not found")
 		}
 	}
 }
