@@ -11,21 +11,22 @@ import (
 	"github.com/seanhuebl/pokedexcli/internal"
 )
 
+// cliCommand represents a command with its name, description, and associated callback function.
 type cliCommand struct {
 	name        string
 	description string
 	callback    func() error
 }
 
+// getCommands initializes the available CLI commands for the Pokedex program.
+// It returns a map of command names to their respective cliCommand configurations.
 func getCommands(config *internal.Config, cache *internal.Cache, areaName, pokemonName string) map[string]cliCommand {
-
 	return map[string]cliCommand{
 		"help": {
 			name:        "help",
 			description: "Displays a help message",
 			callback:    commandHelp,
 		},
-
 		"exit": {
 			name:        "exit",
 			description: "Exits the program",
@@ -80,39 +81,39 @@ func getCommands(config *internal.Config, cache *internal.Cache, areaName, pokem
 		},
 		"pokedex": {
 			name:        "pokedex",
-			description: "display caught pokemon in pokedex",
+			description: "Displays caught pokemon in pokedex",
 			callback: func() error {
 				return internal.ViewPokedex()
 			},
 		},
 	}
 }
+
+// commandHelp prints out a list of available commands with their descriptions.
 func commandHelp() error {
 	commands := getCommands(nil, nil, "", "")
 	fmt.Println("Welcome to the Pokedex:")
 	fmt.Println("Usage:")
 	fmt.Println("")
-	fmt.Printf("help: %v\n", commands["help"].description)
-	fmt.Printf("map: %v\n", commands["map"].description)
-	fmt.Printf("mapb: %v\n", commands["mapb"].description)
-	fmt.Printf("explore <area-name>: %v\n", commands["explore"].description)
-	fmt.Printf("catch <pokemon-name>: %v\n", commands["catch"].description)
-	fmt.Printf("inspect <pokemon-name>: %v\n", commands["inspect"].description)
-	fmt.Printf("pokedex: %v\n", commands["pokedex"].description)
-	fmt.Printf("exit: %v\n\n", commands["exit"].description)
+	for _, cmd := range commands {
+		fmt.Printf("%s: %s\n", cmd.name, cmd.description)
+	}
 	return nil
 }
 
+// commandExit exits the program.
 func commandExit() error {
 	os.Exit(0)
 	return nil
 }
+
 func main() {
 	const interval = 5 * time.Second
 	ch := make(chan string)
 	cache := internal.NewCache(interval)
 	config := &internal.Conf
 
+	// Goroutine to continuously read user input from stdin.
 	go func() {
 		defer close(ch)
 		scanner := bufio.NewScanner(os.Stdin)
@@ -121,10 +122,13 @@ func main() {
 		}
 	}()
 
+	// Main command loop
 	for {
 		fmt.Print("pokedex > ")
 		value := <-ch
 		fmt.Println("")
+
+		// Regular expressions to match each CLI command
 		helpMatch := regexp.MustCompile("help")
 		exitMatch := regexp.MustCompile("exit")
 		mapMatch := regexp.MustCompile("^map$")
@@ -133,8 +137,9 @@ func main() {
 		catchMatch := regexp.MustCompile("^catch .*")
 		inspectMatch := regexp.MustCompile("^inspect .*")
 		pokedexMatch := regexp.MustCompile("pokedex")
-		switch true {
 
+		// Command execution based on user input match
+		switch true {
 		case helpMatch.MatchString(value):
 			commandHelp()
 			fmt.Println("")
@@ -147,36 +152,39 @@ func main() {
 			if err != nil {
 				fmt.Println(err)
 			}
+
 		case mapbMatch.MatchString(value):
 			err := getCommands(config, cache, "", "")["mapb"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
+
 		case exploreMatch.MatchString(value):
-			areaName := strings.Split(value, " ")[1]
+			areaName := strings.Split(value, " ")[1] // Parse area name from input
 			err := getCommands(nil, cache, areaName, "")["explore"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
+
 		case catchMatch.MatchString(value):
-			pokemonName := strings.Split(value, " ")[1]
+			pokemonName := strings.Split(value, " ")[1] // Parse Pokémon name from input
 			err := getCommands(nil, cache, "", pokemonName)["catch"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
+
 		case inspectMatch.MatchString(value):
-			pokemonName := strings.Split(value, " ")[1]
+			pokemonName := strings.Split(value, " ")[1] // Parse Pokémon name from input
 			err := getCommands(nil, cache, "", pokemonName)["inspect"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
+
 		case pokedexMatch.MatchString(value):
 			err := getCommands(nil, nil, "", "")["pokedex"].callback()
 			if err != nil {
 				fmt.Println(err)
 			}
-
 		}
-
 	}
 }
